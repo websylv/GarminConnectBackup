@@ -7,10 +7,14 @@ import os
 import sqlite3
 import sys
 
-
+####
+# SETTINGS
+####
 localPath = "D:\GarminBackup"
 username="<<enter Garmin connect email address>>"
 password="<<enter Garmin connect password>>"
+#########
+
 maxDown = 50
 dbFile = "backup.db"
 
