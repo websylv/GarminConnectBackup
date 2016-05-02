@@ -10,12 +10,12 @@ pip install requests
 
 Then edit the settings of the script :
 
-####
-# SETTINGS
-####
-localPath = "D:\GarminBackup" --> Base directory for you 
-username="<<enter Garmin connect email address>>" --> your garmin connect email address
-password="<<enter Garmin connect password>>"
-#########
+>####
+># SETTINGS
+>####
+>localPath = "D:\GarminBackup" --> Base directory for you 
+>username="<<enter Garmin connect email address>>" --> your garmin connect email address
+>password="<<enter Garmin connect password>>"
+>#########
 
 If you want to force a new download of all activities, juste delete the DB file backup.db
