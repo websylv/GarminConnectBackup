@@ -6,17 +6,29 @@ from urllib import urlencode
 import os
 import sqlite3
 import sys
+import smtplib
 
-####
-# SETTINGS
-####
-localPath = "D:\GarminBackup"
-username="<<enter Garmin connect email address>>"
-password="<<enter Garmin connect password>>"
-#########
 
+localPath = "C:\GarminBackup"
+username="<<Garmin connect EMAIL>>"
+password="<<Garmin Connect password>>"
 maxDown = 50
 dbFile = "backup.db"
+
+mailEnable = 1
+mailFrom = "<<EMAIL FROM>>"
+mailTo = "<<EMAIL TO>>"
+useSmptSSL = 1
+smtpSrv = "<<SMTP SERVER>>:<<SMTP PORT>>"
+smtpUser = "<<SMTP USER>>"
+smtpPwd = "<<SMTP PASSWORD>>"
+
+message = """From: Garmin Backup <%s>
+To: %s
+Subject: Garmin Backup Report
+
+"""%(mailFrom,mailTo)
+
 
 if not os.path.isdir(localPath):
     os.mkdir(localPath)
@@ -53,6 +65,7 @@ url_minAct ="https://connect.garmin.com/minactivities"
 
 s = requests.Session()
 
+#Forcing headers to avoid 500 error when downloading file
 s.headers.update({"Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
 "Accept-Encoding":"gzip, deflate, sdch",'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/1337 Safari/537.36'})
 
@@ -63,6 +76,7 @@ res = s.get(url_login)
 post_data = {'username': username, 'password': password, 'embed': 'true', 'lt': 'e1s1', '_eventId': 'submit', 'displayNameRequired': 'false'}  # Fields that are passed in a typical Garmin login.
 res = s.post(url_login,post_data)
 
+#testing login ticket (CASTGC)
 login_ticket = None
 for cookie in s.cookies:
     if cookie.name == 'CASTGC':
@@ -71,8 +85,8 @@ for cookie in s.cookies:
 if not login_ticket:
 	raise Exception('Did not get a ticket cookie. Cannot log in. Did you enter the correct username and password?')
 
+#Doing post login to validate ticket
 login_ticket = 'ST-0' + login_ticket[4:]
-
 s.get(url_post + 'ticket=' + login_ticket)
 
 rawstr = r"""filename="*([\w|\.]*)"*"""
@@ -82,6 +96,7 @@ compile_obj = re.compile(rawstr,  re.IGNORECASE)
 
 end = 0
 currentPage = 0
+nbDown = 0
 
 
 while not end:
@@ -104,17 +119,27 @@ while not end:
             ["kml",url_gc_kml_activity+activity['activity']['activityId']+"?full=true"],
             ["tcx",url_gc_tcx_activity+activity['activity']['activityId']+"?full=true"]
             ]
-        
-        print 'Garmin Connect activity: [' + activity['activity']['activityId'] + ']',
-        print activity['activity']['activityName']['value'],
-        print '\t' + activity['activity']['beginTimestamp']['display'] + ','
 
+        currentActivityId = activity['activity']['activityId']
+        currentActivityName =  activity['activity']['activityName']['value']
+        currentActivityTime = activity['activity']['beginTimestamp']['display']
+        print 'Garmin Connect activity: [' + currentActivityId + ']',
+        print currentActivityName,
+        print '\t' + currentActivityTime + ','
+        formatDownloaded =0
         for tmpUrl in urls :
             req = "SELECT count(*) as nb FROM backup WHERE idActivity = %s AND Type = '%s'"%(activity['activity']['activityId'],tmpUrl[0])
             cur.execute(req)
             res=cur.fetchone()
             if res[0] == 0:
                 print "Downloading "+tmpUrl[0]+" file from : "+tmpUrl[1]+""
+                nbDown += 1
+
+                #Generating email
+                if formatDownloaded == 0:
+                    message += "Downloaded : %s - %s (%s) Format : "%(currentActivityName,currentActivityTime,currentActivityId)
+                message += " %s "%(tmpUrl[0])
+                
                 r = s.get(tmpUrl[1], stream=True)
                 if tmpUrl[0] == "csv":
                     fileName = tmpUrl[1].split('/')[-1:][0]
@@ -129,10 +154,30 @@ while not end:
                 dstFile = dstDir + fileName
                 with open(dstFile, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=1024): 
-                        if chunk: # filter out keep-alive new chunks
+                        if chunk: 
                             f.write(chunk)
                 
                 cur.execute("INSERT INTO backup(idActivity,Name,Date,Type,File) VALUES (?,?,?,?,?)",(activity['activity']['activityId'],activity['activity']['activityName']['value'],activity['activity']['beginTimestamp']['display'],tmpUrl[0],dstFile))
                 con.commit()
+                formatDownloaded += 1
+
+        if formatDownloaded > 1 :
+            message += "\r\n"
     currentPage += 1
 con.close()
+
+
+if mailEnable and nbDown > 0 :
+    message = message.encode("UTF8")
+    if useSmptSSL :
+        smtpObj = smtplib.SMTP_SSL(smtpSrv)
+    else :
+        smtpObj = smtplib.smtp(smtpSrv)
+    smtpObj.login(smtpUser,smtpPwd)
+    smtpObj.sendmail(mailFrom, mailTo, message)         
+    print "Successfully sent email"
+    smtpObj.quit()
+
+
+
+
