@@ -17,6 +17,14 @@ Then edit the settings of the script :
 localPath = "D:\GarminBackup" --> Base directory for you
 username="<<enter Garmin connect email address>>" --> your garmin connect email address
 password="<<enter Garmin connect password>>"
+
+mailEnable = 1
+mailFrom = "<<EMAIL FROM>>"
+mailTo = "<<EMAIL TO>>"
+useSmptSSL = 1
+smtpSrv = "<<SMTP SERVER>>:<<SMTP PORT>>"
+smtpUser = "<<SMTP USER>>"
+smtpPwd = "<<SMTP PASSWORD>>"
 #########
 ```
 
