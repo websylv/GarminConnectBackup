@@ -55,9 +55,12 @@ url_login = "https://sso.garmin.com/sso/login?service=https%3A%2F%2Fconnect.garm
 url_post = 'https://connect.garmin.com/post-auth/login?'
 url_activity    = 'https://connect.garmin.com/proxy/activity-search-service-1.0/json/activities?'
 
-url_gc_gpx_activity = 'https://connect.garmin.com/modern/proxy/activity-service-1.1/gpx/activity/'
-url_gc_kml_activity = 'https://connect.garmin.com/modern/proxy/activity-service-1.1/kml/activity/'
-url_gc_tcx_activity = 'https://connect.garmin.com/modern/proxy/activity-service-1.1/tcx/activity/'
+#OLD url_gc_gpx_activity = 'https://connect.garmin.com/modern/proxy/activity-service-1.1/gpx/activity/'
+url_gc_gpx_activity = 'https://connect.garmin.com/modern/proxy/download-service/export/gpx/activity/'
+#OLD url_gc_kml_activity = 'https://connect.garmin.com/modern/proxy/activity-service-1.1/kml/activity/'
+url_gc_kml_activity = 'https://connect.garmin.com/modern/proxy/download-service/export/kml/activity/'
+#OLD url_gc_tcx_activity = 'https://connect.garmin.com/modern/proxy/activity-service-1.1/tcx/activity/'
+url_gc_tcx_activity = 'https://connect.garmin.com/modern/proxy/download-service/export/tcx/activity/'
 url_gc_original_activity = 'https://connect.garmin.com/modern/proxy/download-service/files/activity/'
 url_gc_csv_activity = 'https://connect.garmin.com/csvExporter/'
 
@@ -132,34 +135,38 @@ while not end:
             cur.execute(req)
             res=cur.fetchone()
             if res[0] == 0:
-                print "Downloading "+tmpUrl[0]+" file from : "+tmpUrl[1]+""
-                nbDown += 1
-
-                #Generating email
-                if formatDownloaded == 0:
-                    message += "Downloaded : %s - %s (%s) Format : "%(currentActivityName,currentActivityTime,currentActivityId)
-                message += " %s "%(tmpUrl[0])
                 
                 r = s.get(tmpUrl[1], stream=True)
-                if tmpUrl[0] == "csv":
-                    fileName = tmpUrl[1].split('/')[-1:][0]
-                else:
-                    headerContent = r.headers.get('content-disposition')
-                    match_obj = compile_obj.search(headerContent)
-                    fileName = match_obj.group(1)
-                dstDir = localPath + "\\"+tmpUrl[0]+"\\"
-                if not os.path.isdir(dstDir):
-                    print "Creating directory "+dstDir
-                    os.mkdir(dstDir)
-                dstFile = dstDir + fileName
-                with open(dstFile, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=1024): 
-                        if chunk: 
-                            f.write(chunk)
+                headerContent = r.headers.get('content-disposition')
                 
-                cur.execute("INSERT INTO backup(idActivity,Name,Date,Type,File) VALUES (?,?,?,?,?)",(activity['activity']['activityId'],activity['activity']['activityName']['value'],activity['activity']['beginTimestamp']['display'],tmpUrl[0],dstFile))
-                con.commit()
-                formatDownloaded += 1
+                if headerContent is not None or tmpUrl[0] == "csv":
+                    print "Downloading "+tmpUrl[0]+" file from : "+tmpUrl[1]+""
+                    nbDown += 1
+
+                    #Generating email
+                    if formatDownloaded == 0:
+                        message += "Downloaded : %s - %s (%s) Format : "%(currentActivityName,currentActivityTime,currentActivityId)
+                    message += " %s "%(tmpUrl[0])
+                
+                    if tmpUrl[0] == "csv":
+                        fileName = tmpUrl[1].split('/')[-1:][0]
+                    else:
+                        headerContent = r.headers.get('content-disposition')
+                        match_obj = compile_obj.search(headerContent)
+                        fileName = match_obj.group(1)
+                    dstDir = localPath + "\\"+tmpUrl[0]+"\\"
+                    if not os.path.isdir(dstDir):
+                        print "Creating directory "+dstDir
+                        os.mkdir(dstDir)
+                    dstFile = dstDir + fileName
+                    with open(dstFile, 'wb') as f:
+                        for chunk in r.iter_content(chunk_size=1024): 
+                            if chunk: 
+                                f.write(chunk)
+                
+                    cur.execute("INSERT INTO backup(idActivity,Name,Date,Type,File) VALUES (?,?,?,?,?)",(activity['activity']['activityId'],activity['activity']['activityName']['value'],activity['activity']['beginTimestamp']['display'],tmpUrl[0],dstFile))
+                    con.commit()
+                    formatDownloaded += 1
 
         if formatDownloaded > 1 :
             message += "\r\n"
@@ -177,7 +184,3 @@ if mailEnable and nbDown > 0 :
     smtpObj.sendmail(mailFrom, mailTo, message)         
     print "Successfully sent email"
     smtpObj.quit()
-
-
-
-
