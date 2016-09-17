@@ -95,7 +95,9 @@ s.get(url_post + 'ticket=' + login_ticket)
 rawstr = r"""filename="*([\w|\.]*)"*"""
 compile_obj = re.compile(rawstr,  re.IGNORECASE)
 
-
+#Post login to fix 403 error
+tmp = s.get("http://connect.garmin.com/modern")
+tmp = s.get("https://connect.garmin.com/legacy/session")
 
 end = 0
 currentPage = 0
