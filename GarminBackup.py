@@ -51,9 +51,9 @@ except Exception:
     req = "CREATE  INDEX \"main\".\"Ibackup\" ON \"backup\" (\"idActivity\" DESC, \"Type\" DESC)"
     cur.execute(req)
     
-url_login = "https://sso.garmin.com/sso/login?service=https%3A%2F%2Fconnect.garmin.com%2Fpost-auth%2Flogin&webhost=olaxpw-connect20.garmin.com&source=https%3A%2F%2Fconnect.garmin.com%2Fen-US%2Fsignin&redirectAfterAccountLoginUrl=https%3A%2F%2Fconnect.garmin.com%2Fpost-auth%2Flogin&redirectAfterAccountCreationUrl=https%3A%2F%2Fconnect.garmin.com%2Fpost-auth%2Flogin&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso&locale=fr&id=gauth-widget&cssUrl=https%3A%2F%2Fstatic.garmincdn.com%2Fcom.garmin.connect%2Fui%2Fcss%2Fgauth-custom-v1.2-min.css&clientId=GarminConnect&rememberMeShown=true&rememberMeChecked=false&createAccountShown=true&openCreateAccount=false&usernameShown=false&displayNameShown=false&consumeServiceTicket=false&initialFocus=true&embedWidget=false&generateExtraServiceTicket=false"
+url_login = "https://sso.garmin.com/sso/signin?service=https%3A%2F%2Fconnect.garmin.com%2Fmodern%2F&webhost=https%3A%2F%2Fconnect.garmin.com&source=https%3A%2F%2Fconnect.garmin.com%2Fen-US%2Fsignin&redirectAfterAccountLoginUrl=https%3A%2F%2Fconnect.garmin.com%2Fmodern%2F&redirectAfterAccountCreationUrl=https%3A%2F%2Fconnect.garmin.com%2Fmodern%2F&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso&locale=en_US&id=gauth-widget&cssUrl=https%3A%2F%2Fstatic.garmincdn.com%2Fcom.garmin.connect%2Fui%2Fcss%2Fgauth-custom-v1.2-min.css&privacyStatementUrl=%2F%2Fconnect.garmin.com%2Fen-US%2Fprivacy%2F&clientId=GarminConnect&rememberMeShown=true&rememberMeChecked=false&createAccountShown=true&openCreateAccount=false&displayNameShown=false&consumeServiceTicket=false&initialFocus=true&embedWidget=false&generateExtraServiceTicket=true&generateTwoExtraServiceTickets=false&generateNoServiceTicket=false&globalOptInShown=true&globalOptInChecked=false&mobile=false&connectLegalTerms=true&locationPromptShown=true"
 url_post = 'https://connect.garmin.com/post-auth/login?'
-url_activity    = 'https://connect.garmin.com/proxy/activity-search-service-1.0/json/activities?'
+url_activity    = 'https://connect.garmin.com/modern/proxy/activitylist-service/activities/search/activities?'
 
 #OLD url_gc_gpx_activity = 'https://connect.garmin.com/modern/proxy/activity-service-1.1/gpx/activity/'
 url_gc_gpx_activity = 'https://connect.garmin.com/modern/proxy/download-service/export/gpx/activity/'
@@ -61,7 +61,7 @@ url_gc_gpx_activity = 'https://connect.garmin.com/modern/proxy/download-service/
 url_gc_kml_activity = 'https://connect.garmin.com/modern/proxy/download-service/export/kml/activity/'
 #OLD url_gc_tcx_activity = 'https://connect.garmin.com/modern/proxy/activity-service-1.1/tcx/activity/'
 url_gc_tcx_activity = 'https://connect.garmin.com/modern/proxy/download-service/export/tcx/activity/'
-url_gc_original_activity = 'https://connect.garmin.com/modern/proxy/download-service/files/activity/'
+url_gc_original_activity = 'https://connect.garmin.com/modern/proxy/download-service/files/activity//'
 url_gc_csv_activity = 'https://connect.garmin.com/csvExporter/'
 
 url_minAct ="https://connect.garmin.com/minactivities"
@@ -70,18 +70,19 @@ s = requests.Session()
 
 #Forcing headers to avoid 500 error when downloading file
 s.headers.update({"Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-"Accept-Encoding":"gzip, deflate, sdch",'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/1337 Safari/537.36'})
+"Accept-Encoding":"gzip, deflate, sdch",'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36','origin' : 'https://sso.garmin.com','referer':'https://sso.garmin.com/sso/signin?service=https%3A%2F%2Fconnect.garmin.com%2Fmodern%2F&webhost=https%3A%2F%2Fconnect.garmin.com&source=https%3A%2F%2Fconnect.garmin.com%2Fen-US%2Fsignin&redirectAfterAccountLoginUrl=https%3A%2F%2Fconnect.garmin.com%2Fmodern%2F&redirectAfterAccountCreationUrl=https%3A%2F%2Fconnect.garmin.com%2Fmodern%2F&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso&locale=en_US&id=gauth-widget&cssUrl=https%3A%2F%2Fstatic.garmincdn.com%2Fcom.garmin.connect%2Fui%2Fcss%2Fgauth-custom-v1.2-min.css&privacyStatementUrl=%2F%2Fconnect.garmin.com%2Fen-US%2Fprivacy%2F&clientId=GarminConnect&rememberMeShown=true&rememberMeChecked=false&createAccountShown=true&openCreateAccount=false&displayNameShown=false&consumeServiceTicket=false&initialFocus=true&embedWidget=false&generateExtraServiceTicket=true&generateTwoExtraServiceTickets=false&generateNoServiceTicket=false&globalOptInShown=true&globalOptInChecked=false&mobile=false&connectLegalTerms=true&locationPromptShown=true'})
 
 #first call to init session
 res = s.get(url_login)
 
 #posting credentials
-post_data = {'username': username, 'password': password, 'embed': 'true', 'lt': 'e1s1', '_eventId': 'submit', 'displayNameRequired': 'false'}  # Fields that are passed in a typical Garmin login.
+post_data = {'username': username, 'password': password, 'embed': 'false'}  # Fields that are passed in a typical Garmin login.
 res = s.post(url_login,post_data)
 
 #testing login ticket (CASTGC)
 login_ticket = None
 for cookie in s.cookies:
+    print cookie.name
     if cookie.name == 'CASTGC':
         login_ticket = cookie.value
         break
@@ -95,9 +96,8 @@ s.get(url_post + 'ticket=' + login_ticket)
 rawstr = r"""filename="*([\w|\.]*)"*"""
 compile_obj = re.compile(rawstr,  re.IGNORECASE)
 
-#Post login to fix 403 error
-tmp = s.get("http://connect.garmin.com/modern")
-tmp = s.get("https://connect.garmin.com/legacy/session")
+tmo = s.get("https://connect.garmin.com/modern")
+tmo = s.get("https://connect.garmin.com/legacy/session")
 
 end = 0
 currentPage = 0
@@ -110,30 +110,37 @@ while not end:
     result = s.get(url_activity + urlencode(search_params))
     
     json_results = json.loads(result.text.encode("UTF8"))
+    #print json_results
     try:
-        activities = json_results['results']['activities']
+        activities = json_results
     except:
         end=1
-    
+
+    nbDownPage = 0
 
     for activity in activities:
+        nbDownPage += 1
+        currentActivityId = str(activity['activityId'])
+        currentActivityName =  activity['activityName']
+        currentActivityTime = str(activity['beginTimestamp'])
+
+        if(currentActivityName is None):
+            currentActivityName = "Unknown"
+        
         urls = [
-            ["csv",url_gc_csv_activity+activity['activity']['activityId']+".csv"],
-            ["Original",url_gc_original_activity+activity['activity']['activityId']],
-            ["gpx",url_gc_gpx_activity+activity['activity']['activityId']+"?full=true"],
-            ["kml",url_gc_kml_activity+activity['activity']['activityId']+"?full=true"],
-            ["tcx",url_gc_tcx_activity+activity['activity']['activityId']+"?full=true"]
+            ["csv",url_gc_csv_activity+currentActivityId+".csv"],
+            ["Original",url_gc_original_activity+currentActivityId],
+            ["gpx",url_gc_gpx_activity+currentActivityId+"?full=true"],
+            ["kml",url_gc_kml_activity+currentActivityId+"?full=true"],
+            ["tcx",url_gc_tcx_activity+currentActivityId+"?full=true"]
             ]
 
-        currentActivityId = activity['activity']['activityId']
-        currentActivityName =  activity['activity']['activityName']['value']
-        currentActivityTime = activity['activity']['beginTimestamp']['display']
         print 'Garmin Connect activity: [' + currentActivityId + ']',
         print currentActivityName,
         print '\t' + currentActivityTime + ','
         formatDownloaded =0
         for tmpUrl in urls :
-            req = "SELECT count(*) as nb FROM backup WHERE idActivity = %s AND Type = '%s'"%(activity['activity']['activityId'],tmpUrl[0])
+            req = "SELECT count(*) as nb FROM backup WHERE idActivity = %s AND Type = '%s'"%(currentActivityId,tmpUrl[0])
             cur.execute(req)
             res=cur.fetchone()
             if res[0] == 0:
@@ -166,13 +173,15 @@ while not end:
                             if chunk: 
                                 f.write(chunk)
                 
-                    cur.execute("INSERT INTO backup(idActivity,Name,Date,Type,File) VALUES (?,?,?,?,?)",(activity['activity']['activityId'],activity['activity']['activityName']['value'],activity['activity']['beginTimestamp']['display'],tmpUrl[0],dstFile))
+                    cur.execute("INSERT INTO backup(idActivity,Name,Date,Type,File) VALUES (?,?,?,?,?)",(currentActivityId,currentActivityName,activity['beginTimestamp'],tmpUrl[0],dstFile))
                     con.commit()
                     formatDownloaded += 1
 
         if formatDownloaded > 1 :
             message += "\r\n"
     currentPage += 1
+    if nbDownPage == 0:
+        end = 1
 con.close()
 
 
